@@ -255,7 +255,32 @@ class Database:
 
 	# TODO: QUERY
 	def select_raw(self, query):
-		pass
+		try:
+			cursor = self.get_cursor()
+			if not cursor:
+				return self.response_error(self.CONST_MSG_ERR)
+			cursor.execute(query)
+			rows = cursor.fetchall()
+			cursor.close()
+			return self.response_success(rows)
+		except Exception as e:
+			return self.response_error(e)
+
+	def select_obj(self, table, where = None, select_field = None):
+		table_name = self.get_table_name(table)
+		cursor = self.get_cursor()
+		if not cursor:
+			return self.response_error(self.CONST_MSG_ERR)
+		data_select = '*'
+		if select_field and isinstance(select_field, list):
+			data_select = ','.join(select_field)
+		query = "SELECT " + data_select + " FROM `" + table_name + "`"
+		if where:
+			if isinstance(where, str):
+				query += " WHERE " + where
+			elif isinstance(where, dict):
+				query += " WHERE " + self.dict_to_where_condition(where)
+		return self.select_raw(query)
 
 	def insert_raw(self, query, insert_id = False):
 		cursor = self.get_cursor()
@@ -284,7 +309,7 @@ class Database:
 		try:
 			cursor.execute(query)
 			self._conn.commit()
-			self.close_connect()
+			self._cursor.close()
 			return self.response_success()
 		except mysql.connector.Error as e:
 			if e.errno == errorcode.ER_TABLE_EXISTS_ERROR:

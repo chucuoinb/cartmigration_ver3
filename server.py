@@ -4,15 +4,9 @@ import configparser
 import os
 import socket
 import sys
-import time
 import json
-
-from pexpect.expect import searcher_re
-
 from models.setup import Setup
 from libs.utils import *
-from libs.thread import CustomThread
-import threading
 
 
 class Server:
@@ -43,7 +37,6 @@ class Server:
 				conn, addr = self.socket.accept()
 
 				text = ''
-				# chunk = ''
 				while True:
 					data = conn.recv(200)
 					data = data.decode("utf-8")
@@ -78,9 +71,12 @@ class Server:
 				controller = self.all_thread[data_license]
 				getattr(controller, action_name)()
 			else:
-				controller = get_controller(controller_name,buffer)
+				controller = get_controller(controller_name, data)
 				self.all_thread[data_license] = controller
 				controller.start()
+		else:
+			controller = get_controller(controller_name, data)
+			getattr(controller, action_name)(data, conn)
 
 	def shutdown(self):
 		try:
@@ -89,24 +85,24 @@ class Server:
 			pass
 
 	def is_config(self):
+		return False
 		return os.path.isfile(self.CONFIG_FILE)
 
 	def setup(self):
-		host = input('Enter database host: \n')
-		username = input('Enter database username: \n')
-		password = input('Enter database password: \n')
-		name = input('Enter database name: \n')
-		prefix = input('Enter database prefix: \n')
-		config = configparser.ConfigParser()
-		config.add_section('mysql')
-		config['mysql']['db_host'] = host
-		config['mysql']['db_username'] = username
-		config['mysql']['db_password'] = password
-		config['mysql']['db_name'] = name
-		config['mysql']['db_prefix'] = prefix
-		with open(self.CONFIG_FILE, 'w') as configfile:  # save
-			config.write(configfile)
+		# host = input('Enter database host: \n')
+		# username = input('Enter database username: \n')
+		# password = input('Enter database password: \n')
+		# name = input('Enter database name: \n')
+		# prefix = input('Enter database prefix: \n')
+		# config = configparser.ConfigParser()
+		# config.add_section('mysql')
+		# config['mysql']['db_host'] = host
+		# config['mysql']['db_username'] = username
+		# config['mysql']['db_password'] = password
+		# config['mysql']['db_name'] = name
+		# config['mysql']['db_prefix'] = prefix
+		# with open(self.CONFIG_FILE, 'w') as configfile:  # save
+		# 	config.write(configfile)
 		setup = Setup()
 		setup.run()
 		return True
-

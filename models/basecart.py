@@ -1,7 +1,8 @@
 from libs.database import Database
+from libs.base_model import BaseModel
+from libs.utils import *
 
-
-class Cart:
+class LeBasecart:
 	CONNECTOR_SUFFIX = '/litextension_connector/connector.php'
 	TYPE_TAX = 'tax'
 	TYPE_TAX_PRODUCT = 'tax_product'
@@ -67,11 +68,57 @@ class Cart:
 	PRICE_POSITIVE = '+'
 	PRICE_NEGATIVE = '-'
 
-	def __init__(self):
+	def __init__(self, _license):
+		super().__init__()
 		self._db = None
 		self._notice = None
 		self._cart_url = None
 		self._type = None
+		self._user_id = None
+		self._license = _license
 
 	# TODO: INIT
+	def get_db(self):
+		if not self._db:
+			db = Database()
+			conn = db.get_connect()
+			if not conn:
+				return None
+			self._db = db
+		return self._db
 
+
+	# TODO: NOTICE
+	def set_type(self, cart_type):
+		self._type = cart_type
+
+	def get_type(self):
+		return self._type
+
+	def get_user_id(self):
+		return self._user_id
+
+	def set_user_id(self,user_id):
+		self._user_id = user_id
+
+	def set_notice(self, notice):
+		self._notice = notice
+		cart_type = self.get_type()
+		if cart_type:
+			self._cart_url = notice[cart_type]['cart_url']
+		return self
+
+	def get_notice(self):
+		return self._notice
+
+	def get_user_notice(self, user_license):
+		if not user_license:
+			return None
+		db = self.get_db()
+		if not db:
+			return None
+		notice = db.select_obj(TABLE_NOTICE,{'license':user_license})
+		# if notice['result'] != 'success':
+
+	def sync_notice(self, notice):
+		notice_server = self.get_user_notice(notice['license'])

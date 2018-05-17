@@ -8,7 +8,7 @@ class BaseModel:
 		self._db = Database()
 
 	def get_db(self):
-		return self.get_db()
+		return self._db
 
 	def query_raw(self, query):
 		return self._db.query_raw(query)
