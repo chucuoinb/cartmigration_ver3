@@ -29,23 +29,40 @@ class Server:
 		self.socket = None
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		# sock = ssl.wrap_socket(self.socket)
-		try:
-			print("Starting server on {host}:{port}".format(host = self.host, port = self.port))
-			self.socket.bind((self.host, self.port))
-			while True:
-				self.socket.listen(1)
-				conn, addr = self.socket.accept()
+		print("Starting server on {host}:{port}".format(host = self.host, port = self.port))
+		self.socket.bind((self.host, self.port))
+		while True:
+			self.socket.listen(1)
+			conn, addr = self.socket.accept()
 
-				text = ''
-				while True:
-					data = conn.recv(200)
-					data = data.decode("utf-8")
-					if not data:
-						# Unreliable
-						break
-					else:
-						text += data
-				self.solve_buffer(conn, text)
+			text = ''
+			while True:
+				data = conn.recv(200)
+				data = data.decode("utf-8")
+				if not data:
+					# Unreliable
+					break
+				else:
+					text += data
+			self.solve_buffer(conn, text)
+		try:
+			pass
+			# print("Starting server on {host}:{port}".format(host = self.host, port = self.port))
+			# self.socket.bind((self.host, self.port))
+			# while True:
+			# 	self.socket.listen(1)
+			# 	conn, addr = self.socket.accept()
+			#
+			# 	text = ''
+			# 	while True:
+			# 		data = conn.recv(200)
+			# 		data = data.decode("utf-8")
+			# 		if not data:
+			# 			# Unreliable
+			# 			break
+			# 		else:
+			# 			text += data
+			# 	self.solve_buffer(conn, text)
 		except Exception as e:
 			print(e)
 			self.shutdown()
@@ -85,24 +102,23 @@ class Server:
 			pass
 
 	def is_config(self):
-		return False
 		return os.path.isfile(self.CONFIG_FILE)
 
 	def setup(self):
-		# host = input('Enter database host: \n')
-		# username = input('Enter database username: \n')
-		# password = input('Enter database password: \n')
-		# name = input('Enter database name: \n')
-		# prefix = input('Enter database prefix: \n')
-		# config = configparser.ConfigParser()
-		# config.add_section('mysql')
-		# config['mysql']['db_host'] = host
-		# config['mysql']['db_username'] = username
-		# config['mysql']['db_password'] = password
-		# config['mysql']['db_name'] = name
-		# config['mysql']['db_prefix'] = prefix
-		# with open(self.CONFIG_FILE, 'w') as configfile:  # save
-		# 	config.write(configfile)
+		host = input('Enter database host: \n')
+		username = input('Enter database username: \n')
+		password = input('Enter database password: \n')
+		name = input('Enter database name: \n')
+		prefix = input('Enter database prefix: \n')
+		config = configparser.ConfigParser()
+		config.add_section('mysql')
+		config['mysql']['db_host'] = host
+		config['mysql']['db_username'] = username
+		config['mysql']['db_password'] = password
+		config['mysql']['db_name'] = name
+		config['mysql']['db_prefix'] = prefix
+		with open(self.CONFIG_FILE, 'w') as configfile:  # save
+			config.write(configfile)
 		setup = Setup()
 		setup.run()
 		return True

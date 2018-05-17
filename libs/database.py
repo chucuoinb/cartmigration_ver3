@@ -2,7 +2,7 @@ import configparser
 import mysql.connector
 from mysql.connector import errorcode
 from pathlib import Path
-from libs import utils
+from libs.utils import *
 import re
 
 
@@ -87,7 +87,7 @@ class Database:
 		config = configparser.ConfigParser()
 		config.read(self.CONFIG_FILE)
 		self.set_db_host(config['mysql']['db_host']).set_username(config['mysql']['db_username']).set_db_password(
-				config['mysql']['db_password']).set_db_name(config['mysql']['db_name'])
+				config['mysql']['db_password']).set_db_name(config['mysql']['db_name']).set_db_prefix(config['mysql']['db_prefix'])
 		return self
 
 	def get_config(self):
@@ -168,8 +168,8 @@ class Database:
 
 		table = dictionary['table']
 		row_data = dictionary['rows']
-		references_data = utils.get_value_by_key_in_dict(dictionary, 'references', dict())
-		unique_data = utils.get_value_by_key_in_dict(dictionary, 'unique', dict())
+		references_data = get_value_by_key_in_dict(dictionary, 'references', dict())
+		unique_data = get_value_by_key_in_dict(dictionary, 'unique', dict())
 		rows = list()
 		for row_name, construct in row_data.items():
 			row = "`" + row_name + "` " + construct
@@ -258,19 +258,19 @@ class Database:
 		try:
 			cursor = self.get_cursor()
 			if not cursor:
-				return self.response_error(self.CONST_MSG_ERR)
+				return response_error(self.CONST_MSG_ERR)
 			cursor.execute(query)
 			rows = cursor.fetchall()
 			cursor.close()
-			return self.response_success(rows)
+			return response_success(rows)
 		except Exception as e:
-			return self.response_error(e)
+			return response_error(e)
 
 	def select_obj(self, table, where = None, select_field = None):
 		table_name = self.get_table_name(table)
 		cursor = self.get_cursor()
 		if not cursor:
-			return self.response_error(self.CONST_MSG_ERR)
+			return response_error(self.CONST_MSG_ERR)
 		data_select = '*'
 		if select_field and isinstance(select_field, list):
 			data_select = ','.join(select_field)
@@ -285,16 +285,16 @@ class Database:
 	def insert_raw(self, query, insert_id = False):
 		cursor = self.get_cursor()
 		if not cursor:
-			return self.response_error()
+			return response_error()
 		try:
 			cursor.execute(query)
 			self._conn.commit()
 			data = True
 			if insert_id:
 				data = cursor.lastrowid
-			return self.response_success(data)
+			return response_success(data)
 		except Exception as e:
-			return self.response_error(e)
+			return response_error(e)
 
 	def insert_obj(self, table, data, insert_id = False):
 		table_name = self.get_table_name(table)
@@ -302,27 +302,33 @@ class Database:
 		query = "INSERT INTO `" + table_name + "` " + data_condition
 		return self.insert_raw(query, insert_id)
 
+	def update_obj(self, table, data, where = None):
+		table_name = self.get_table_name(table)
+		set_condition = self.dict_to_set_condition(data)
+		if not set_condition:
+			return response_error()
+		query = "UPDATE `" + table_name + "` SET " + set_condition
+		if where:
+			if isinstance(where, str):
+				query += " WHERE " + where
+			elif isinstance(where, dict):
+				query += " WHERE " + self.dict_to_where_condition(where)
+			else:
+				pass
+		return self.query_raw(query)
+
 	def query_raw(self, query):
 		cursor = self.get_cursor()
 		if not cursor:
-			return self.response_error()
+			return response_error()
 		try:
 			cursor.execute(query)
 			self._conn.commit()
 			self._cursor.close()
-			return self.response_success()
+			return response_success()
 		except mysql.connector.Error as e:
 			if e.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-				return self.response_success()
-			return self.response_error(e)
+				return response_success()
+			return response_error(e)
 
-	# response
-	def response_error(self, msg = None):
-		if not msg:
-			msg = self.CONST_MSG_ERR
-		return {'result': 'error', 'msg': msg, 'data': None}
 
-	def response_success(self, data = None, msg = None):
-		return {
-			'result': 'success', 'msg': msg, 'data': data
-		}

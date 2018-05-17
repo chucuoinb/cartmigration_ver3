@@ -10,11 +10,15 @@ class Setup(BaseModel):
 		'rows': {
 			'id': "BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY",
 			'license': "VARCHAR(255) NOT NULL",
-			'status': "TINYINT(2)",
+			'status': "TINYINT(2) NOT NULL DEFAULT 1",
 			'notice': "LONGTEXT NOT NULL",
 			'thread_name': "VARCHAR(255)",
-			'mode': "TINYINT(2)"
-		}
+			'mode': "TINYINT(2) NOT NULL DEFAULT 1"
+		},
+		'unique': [
+			{'license'}
+		]
+
 	}
 
 	_table_map = {
@@ -34,7 +38,10 @@ class Setup(BaseModel):
 		'rows': {
 			'license': "VARCHAR(255) NOT NULL",
 			'notice': "LONGTEXT"
-		}
+		},
+		'unique': [
+			{'license'}
+		]
 	}
 
 	_table_setting = {
@@ -42,7 +49,10 @@ class Setup(BaseModel):
 		'rows': {
 			'license': "VARCHAR(255) NOT NULL",
 			'setting': "LONGTEXT"
-		}
+		},
+		'unique': [
+			{'license'}
+		]
 	}
 
 	def __init__(self):
@@ -53,12 +63,9 @@ class Setup(BaseModel):
 
 		for table in self.tables:
 			query = self.dict_to_create_table_sql(table)
-			print(query)
 			if query['result'] != 'success':
-				print(query)
 				return False
 			res = self.query_raw(query['query'])
 			if res['result'] != 'success':
-				print(res)
 				return False
 		return True

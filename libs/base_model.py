@@ -33,3 +33,6 @@ class BaseModel:
 
 	def insert_raw(self, query, insert_id = False):
 		return self._db.insert_raw(query, insert_id)
+
+	def update_obj(self, table, data, where = None):
+		return self._db.update_obj(table, data, where)

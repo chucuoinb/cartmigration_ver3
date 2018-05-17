@@ -26,7 +26,7 @@ def get_controller(controller_name, data = None):
 	return my_instance
 
 
-def get_model(name,data = None):
+def get_model(name, data = None):
 	if not name:
 		return None
 	name_path = name.replace('_', '/')
@@ -35,7 +35,6 @@ def get_model(name,data = None):
 	if not file_model.is_file():
 		return None
 	model_name = "models." + name.replace('_', '.')
-	print(model_name)
 	module_class = importlib.import_module(model_name)
 	class_name = get_model_class_name(name)
 
@@ -46,7 +45,8 @@ def get_model(name,data = None):
 		else:
 			model = model_class()
 		return model
-	except Exception:
+	except Exception as e:
+		log(None, e)
 		return None
 
 
@@ -62,15 +62,28 @@ def print_time(thread_name):
 	print("%s: %s" % (thread_name, time.ctime(time.time())))
 
 
-def log(_license, msg, type = 'exception'):
-	_license = str(_license)
-	path = 'log/' + _license
+def log(msg, _license = None, type_error = 'exception'):
+	path = 'log/'
+	if _license:
+		_license = str(_license)
+		path = 'log/' + _license
 	if not os.path.exists(path):
 		os.makedirs(path)
-	log_file = open(path + '/' + type + '.log', 'a')
-	if isinstance(msg,dict):
+	log_file = open(path + '/' + type_error + '.log', 'a')
+	if isinstance(msg, dict):
 		msg = json.dumps(msg)
-	msg += '\r\n'
+	msg = str(msg) + '\r\n'
 	date_time = time.strftime('%Y/%m/%d %H:%M:%S')
-	msg = date_time+' : '+msg
+	msg = date_time + ' : ' + msg
 	log_file.write(msg)
+
+
+# response
+def response_error(msg = None):
+	return {'result': 'error', 'msg': msg, 'data': None}
+
+
+def response_success(data = None, msg = None):
+	return {
+		'result': 'success', 'msg': msg, 'data': data
+	}
