@@ -1,3 +1,4 @@
+import base64
 import importlib
 import json
 import time
@@ -46,7 +47,7 @@ def get_model(name, data = None):
 			model = model_class()
 		return model
 	except Exception as e:
-		log(None, e)
+		log(e)
 		return None
 
 
@@ -87,3 +88,18 @@ def response_success(data = None, msg = None):
 	return {
 		'result': 'success', 'msg': msg, 'data': data
 	}
+
+
+# base64
+def string_to_base64(s):
+	if not isinstance(s, str):
+		s = str(s)
+	return base64.b64encode(s.encode('utf-8')).decode('utf-8')
+
+
+def base64_to_string(b):
+	try:
+		s = base64.b64decode(b).decode('utf-8')
+		return s
+	except Exception as e:
+		return b

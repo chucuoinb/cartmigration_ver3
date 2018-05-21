@@ -36,3 +36,12 @@ class BaseModel:
 
 	def update_obj(self, table, data, where = None):
 		return self._db.update_obj(table, data, where)
+
+	def select_obj(self, table, where, select_field = None):
+		return self._db.select_obj(table, where, select_field)
+
+	def select_raw(self, query):
+		return self._db.select_raw(query)
+
+	def delete_obj(self, table, where = None):
+		return self.delete_obj(table, where)

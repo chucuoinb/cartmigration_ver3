@@ -7,18 +7,20 @@ import re
 
 
 class Database:
-	_db = None
-	_conn = None
-	_cursor = None
-	_db_host = ''
-	_db_username = ''
-	_db_password = ''
-	_db_name = ''
-	_db_prefix = ''
+
 	CONFIG_FILE = 'etc/config.ini'
 	CONST_MSG_ERR = 'Could not connect database.'
 
 	def __init__(self):
+		self._db = None
+		self._conn = None
+		self._cursor = None
+		self._db_host = ''
+		self._db_username = ''
+		self._db_password = ''
+		self._db_name = ''
+		self._db_prefix = ''
+		self._license = None
 		self.set_config()
 
 	def default_config(self):
@@ -35,6 +37,12 @@ class Database:
 			return self._db_host
 		default_config = self.default_config()
 		return default_config['db_host']
+
+	def set_license(self, _license):
+		self._license = _license
+
+	def log(self, msg, type_error):
+		log(msg, self._license, type_error)
 
 	def get_db_username(self):
 		if self._db_username:
@@ -143,7 +151,7 @@ class Database:
 	def get_cursor(self):
 		conn = self.get_connect()
 		if conn:
-			self._cursor = conn.cursor()
+			self._cursor = conn.cursor(dictionary=True)
 		return self._cursor
 
 	def get_table_name(self, table):
@@ -260,10 +268,12 @@ class Database:
 			if not cursor:
 				return response_error(self.CONST_MSG_ERR)
 			cursor.execute(query)
-			rows = cursor.fetchall()
-			cursor.close()
-			return response_success(rows)
+			data = list()
+			for row in cursor:
+				data.append(row)
+			return response_success(data)
 		except Exception as e:
+			self.log(e, 'database')
 			return response_error(e)
 
 	def select_obj(self, table, where = None, select_field = None):
@@ -294,6 +304,7 @@ class Database:
 				data = cursor.lastrowid
 			return response_success(data)
 		except Exception as e:
+			self.log(e, 'database')
 			return response_error(e)
 
 	def insert_obj(self, table, data, insert_id = False):
@@ -329,6 +340,20 @@ class Database:
 		except mysql.connector.Error as e:
 			if e.errno == errorcode.ER_TABLE_EXISTS_ERROR:
 				return response_success()
+			self.log(e, 'database')
 			return response_error(e)
 
-
+	def delete_obj(self, table, where = None):
+		cursor = self.get_cursor()
+		if not cursor:
+			return response_error()
+		table_name = self.get_table_name(table)
+		query = "DELETE FROM `" + table_name + "`"
+		if where:
+			if isinstance(where, str):
+				query += " WHERE " + where
+			elif isinstance(where, dict):
+				query += " WHERE " + self.dict_to_where_condition(where)
+			else:
+				pass
+		return self.query_raw(query)

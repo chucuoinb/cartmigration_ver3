@@ -1,3 +1,3 @@
-from models.basecart import LeBasecart
-cart = LeBasecart('123')
-print(cart.convert_version('1.9.3',2))
+from libs.utils import *
+a = {'1':'2','3':4}
+print(str(a))
